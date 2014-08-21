@@ -52,6 +52,7 @@ for indFrames = 1:framesToAnalyze%nFrames
 end
 
 for indCol = 1:nCols
+    % Delete if you have changed the size of framesToAnalyze
     displacementSS(indCol,:) = smooth(displacementS(indCol,:),10);
 end
     
