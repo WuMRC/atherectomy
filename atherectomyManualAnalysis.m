@@ -11,21 +11,30 @@ implay(videoInfo.filename)
 
 %% STEP 3 - Analyze specific frames
 
-frameOfInterest = 165;
+frameOfInterest = 2;
 
 videoFile = VideoReader(videoInfo.filename);
 imageOfInterest = read(videoFile,frameOfInterest);
 imtool(imageOfInterest)
 
 
-%%
+%% STEP 4 - Displacement Analysis
 
 [nRow, nCols, nFrames] = size(videoROI);
+
+fps = 3000;
+time = 0:(1/fps):((nFrames-1)/fps);
+
+distancePerPixel = 1.96/64; 
+edgeLength = (0:1:nCols-1)*distancePerPixel;
+
 
 
 level = graythresh(videoROI(:,:,1));
 
-for indFrames = 1:200%nFrames
+framesToAnalyze = nFrames;
+
+for indFrames = 1:framesToAnalyze%nFrames
     BW(:,:,indFrames) = im2bw(videoROI(:,:,indFrames),level);
     for indCol = 1:nCols
         x = find(BW(:,indCol,indFrames),1,'last');
@@ -37,16 +46,18 @@ for indFrames = 1:200%nFrames
 %         bottomEdgeSMOOTH(indCol,indFrames) = smooth(bottomEdge(indCol,indFrames),10);
     
     end
-    displacement(:,indFrames) = bottomEdge(:,indFrames) ...
-        - bottomEdge(:,1);
-    displacementSMOOTH(:,indFrames) = smooth(bottomEdge(:,indFrames) ...
-        - bottomEdge(:,1),10);
+    displacement(:,indFrames) = (bottomEdge(:,indFrames) ...
+        - bottomEdge(:,1))*distancePerPixel*1000;
+    displacementS(:,indFrames) = smooth(displacement(:,indFrames));
 end
 
 for indCol = 1:nCols
-    
+    displacementSS(indCol,:) = smooth(displacementS(indCol,:),10);
 end
     
 
-    framesToAnalyze = 200;
-mesh(displacementSMOOTH(:,1:framesToAnalyze))
+mesh( time(1:framesToAnalyze), edgeLength,displacementSS(:,1:framesToAnalyze))
+
+xlabel('Time [s]')
+ylabel('Length Along Edge [mm]')
+zlabel('Displacement [µm]')
