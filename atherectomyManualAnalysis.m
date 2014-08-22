@@ -4,10 +4,27 @@
     uigetfile('*.mp4;*.avi','Pick a video file');
 addpath(genpath(videoInfo.pathname))
 
+videoFile = VideoReader(videoInfo.filename);
 
-%% STEP 2 - Play through video looking for frames of interest
+
+%% STEP 2 - Look through frames/regions of interest
 implay(videoInfo.filename)
 
+% Select region of interest
+figure, imshow(read(videoFile,1))
+
+hBox = imrect;
+roiPosition = wait(hBox);
+
+% roiPosition;
+roi_xind = round([roiPosition(2), roiPosition(2), ...
+    roiPosition(2)+roiPosition(4), roiPosition(2)+roiPosition(4)]);
+roi_yind = round([roiPosition(1), roiPosition(1)+roiPosition(3), ...
+    roiPosition(1)+roiPosition(3), roiPosition(1)]);
+close
+
+video = read(videoFile);
+videoROI = video(roi_xind(1):roi_xind(3),roi_yind(1):roi_yind(2),1,:);
 
 %% STEP 3 - Analyze specific frames
 
@@ -20,7 +37,7 @@ imtool(imageOfInterest)
 
 %% STEP 4 - Displacement Analysis
 
-[nRow, nCols, nFrames] = size(videoROI);
+[nRows, nCols, nFrames] = size(videoROI);
 
 fps = 3000;
 time = 0:(1/fps):((nFrames-1)/fps);
@@ -32,7 +49,15 @@ edgeLength = (0:1:nCols-1)*distancePerPixel;
 
 level = graythresh(videoROI(:,:,1));
 
-framesToAnalyze = nFrames;
+framesToAnalyze = 200;
+
+BW = zeros(nRows,nCols,nFrames);
+bottomEdge = zeros(nCols,nFrames);
+displacement = zeros(nCols,nFrames);
+displacementS = zeros(nCols,nFrames);
+displacementSS = zeros(nCols,nFrames);
+
+
 
 for indFrames = 1:framesToAnalyze%nFrames
     BW(:,:,indFrames) = im2bw(videoROI(:,:,indFrames),level);
@@ -48,12 +73,12 @@ for indFrames = 1:framesToAnalyze%nFrames
     end
     displacement(:,indFrames) = (bottomEdge(:,indFrames) ...
         - bottomEdge(:,1))*distancePerPixel*1000;
-    displacementS(:,indFrames) = smooth(displacement(:,indFrames));
+    displacementS(:,indFrames) = smooth(displacement(:,indFrames),20);
 end
 
 for indCol = 1:nCols
     % Delete if you have changed the size of framesToAnalyze
-    displacementSS(indCol,:) = smooth(displacementS(indCol,:),10);
+    displacementSS(indCol,:) = smooth(displacementS(indCol,:),3);
 end
     
 
