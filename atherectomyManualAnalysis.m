@@ -6,6 +6,7 @@ addpath(genpath(videoInfo.pathname))
 
 videoFile = VideoReader(videoInfo.filename);
 
+displacementS = displacementSS
 
 %% STEP 2 - Look through frames/regions of interest
 implay(videoInfo.filename)
@@ -42,14 +43,14 @@ imtool(imageOfInterest)
 fps = 3000;
 time = 0:(1/fps):((nFrames-1)/fps);
 
-distancePerPixel = 1.96/64; 
+distancePerPixel = 1.96/83; 
 edgeLength = (0:1:nCols-1)*distancePerPixel;
 
 
 
 level = graythresh(videoROI(:,:,1));
 
-framesToAnalyze = 200;
+framesToAnalyze = nFrames;
 
 BW = zeros(nRows,nCols,nFrames);
 bottomEdge = zeros(nCols,nFrames);
@@ -75,14 +76,25 @@ for indFrames = 1:framesToAnalyze%nFrames
         - bottomEdge(:,1))*distancePerPixel*1000;
     displacementS(:,indFrames) = smooth(displacement(:,indFrames),20);
 end
-
+% 
 for indCol = 1:nCols
     % Delete if you have changed the size of framesToAnalyze
     displacementSS(indCol,:) = smooth(displacementS(indCol,:),3);
 end
     
 
-mesh( time(1:framesToAnalyze), edgeLength,displacementSS(:,1:framesToAnalyze))
+mesh( time(1:framesToAnalyze), edgeLength,displacementS(:,1:framesToAnalyze))
+
+xlabel('Time [s]')
+ylabel('Length Along Edge [mm]')
+zlabel('Displacement [µm]')
+
+
+%%
+framesToAnalyze = 5610+20;
+mesh(time(5610-10:framesToAnalyze), edgeLength(20:end-40),...
+    displacementSS(20:end-40,5610-10:framesToAnalyze),...
+    'FaceColor','none')
 
 xlabel('Time [s]')
 ylabel('Length Along Edge [mm]')
