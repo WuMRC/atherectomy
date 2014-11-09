@@ -1,4 +1,4 @@
-function [freq] = peakFreq(data, Fs, type, Fc)
+function [freq, mag] = peakFreq(data, Fs, type, Fc)
 %PEAKFREQ Finds the frequency of the data given a sampling frequency
 %
 %   DATA    - The data whose frequency you want to find
@@ -8,6 +8,7 @@ function [freq] = peakFreq(data, Fs, type, Fc)
 %   Fc      - The cutoff frequency the user wants to look around
 %
 %   FREQ    - The dominant frequency of the system (in Hz)
+%   MAG     - The magnitude found at the peak frequency
 
 if nargin < 2
     fprintf('Error: not enough input arguments.\n')
@@ -32,15 +33,18 @@ switch nargin
                 fLow = f(f < Fc);
                 [pks, locs] = findpeaks(dataFmag(f < Fc));
                 freq = fLow(locs(pks == max(pks)));
+                mag = max(pks);
             case 'high'
                 fHigh = f(f > Fc);
                 [pks, locs] = findpeaks(dataFmag(f > Fc));
                 freq = fHigh(locs(pks == max(pks)));
+                mag = max(pks);
             case 'band'
                 if length(Fc) == 2
                 fBand = f(f > Fc(1) & f < Fc(2));
                 [pks, locs] = findpeaks(dataFmag(f > Fc(1) & f < Fc(2)));
                 freq = fBand(locs(pks == max(pks)));
+                mag = max(pks);
                 else
                     fprintf('Cutoff Frequency should be of the form:\n')
                     fprintf('[freqLow freqHigh]\n')
