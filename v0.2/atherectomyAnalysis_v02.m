@@ -20,7 +20,7 @@ for indFrame = 1:vidObj.NumberOfFrames
 end
 
 
-%% STEP 3a - Multithreshold analysis - see what looks good
+%% STEP 3a - Multithreshold analysis - see what looks good (optional)
 
 threshLevel = 1:12;
 figure('units','normalized','outerposition',[0 0 1 1])
@@ -57,8 +57,12 @@ for indFrame = 1:nFrames
                 find(videoSegmented(:,indCol,indFrame)==peakSegment,1,'first');
         else cable(indCol,indFrame) = NaN;
         end
+        
     end
+    % Remove any gaps we may have caused
+    cable(indCol,indFrame) = naninterp(cable(:,indFrame));
 end
+
 
 % imshow(test(:,:,1),'DisplayRange',[0 3])
 % hold on, plot(cable,'r')
@@ -66,7 +70,7 @@ end
 mesh(cable(:,1:1000))
 
 
-%% PRE-STEP 5 - The effects of smoothing
+%% PRE-STEP 5 - The effects of smoothing (optional)
 
 smoothLevel = 10:10:120;
 
@@ -81,16 +85,99 @@ end
 
 %% STEP 5 - Filter cable motion into low and high frequency
 
-Fs = 18000;
-
 cableMotionLo = zeros(size(cable,1),size(cable,2));
 cableMotionHi = zeros(size(cable,1),size(cable,2));
 
-for indCol = cableColLo:cableColHi
+% Choose the portion of cable whose data you want to smooth, because it
+% takes so long I have only chosen one value, but it might be worthwile to
+% select the whole region if time permits
+colOfInterest = 1;
+for indCol = colOfInterest%cableColLo:cableColHi
     cableMotionLo(indCol,:) = smooth(cable(indCol,:),30);    
 end
 
 cableMotionHi(:,:) = cable(:,:) - cableMotionLo(:,:);
+
+
+%% STEP 6 - Detect peak frequency of the cable
+FsCamera = 18000;
+FsRot = 60000/60;   % rpm/(sec/min) = Hz
+
+% If you get errors below insert either naninterp(cableMotionHi(colOfInterest,:))
+% or naninterp(cableMotionLo(colOfInterest,:)) into the pesky part
+
+[freqCableLo, magCableLo] = ...
+    peakFreq(cableMotionLo(colOfInterest,:),FsCamera,'low',FsRot*2);
+[freqCableHi, magCableHi] = ...
+    peakFreq(cableMotionHi(colOfInterest,:),FsCamera,'low',FsRot*2);
+
+%% Setp 7 - Track midpoint of the ginding burr
+% Select the midpoint
+imshow(videoToAnalyze(:,:,1),'DisplayRange',[0 255])
+title('Select the middle of the grinding burr, then hit "Enter"')
+figHandle = gcf;
+[poiX, poiY] = getpts(figHandle);
+close
+
+midCol = uint8(poiX);
+
+% Track the midpoint
+for indFrame = 1:nFrames
+    
+    if find(videoSegmented(:,midCol,indFrame)==peakSegment,1,'first') > 1
+        burr(indFrame) = ...
+            find(videoSegmented(:,midCol,indFrame)==peakSegment,1,'first');
+    else burr(indFrame) = NaN;
+    end
+    % Remove any gaps we may have caused
+    burr(indFrame) = naninterp(burr(indFrame));
+end
+
+
+% imshow(test(:,:,1),'DisplayRange',[0 3])
+% hold on, plot(cable,'r')
+
+plot(burr(1:5000))
+
+%% STEP 8 - Smooth burr motion
+smoothLevel = 30;
+burrMotionLo = smooth(burr,smoothLevel);
+
+plot(burr(1:1000)), hold on, plot(burrMotionLo(1:1000),'r')
+
+%% STEP 9 - Frequency decomposition of the burr's motion
+FsCamera = 18000;
+FsRot = 60000/60;   % rpm/(sec/min) = Hz
+
+[freqBurrLo, magBurrLo] = ...
+    peakFreq(burrMotionLo,FsCamera,'low',FsRot*2);
+
+%% STEP 10 - Compare cable and burr motion (low frequency)
+% Note the lag-lead
+plot(burrMotionLo(1:5000))
+hold on, plot(cableMotionLo(1,1:5000),'r')
+
+%% STEP 11 - Force analysis
+% Select force file
+[forceInfo.filename, forceInfo.pathname] = ...
+    uigetfile('*.txt','Select the .txt corresponding to the force data.');
+addpath(genpath(forceInfo.pathname))
+
+% Import the data and detrend it
+force = importdata(strcat(forceInfo.pathname,forceInfo.filename));
+forceCorrected = detrend(force);
+
+% Find the peak frequency values from the force
+FsForce = 5000;
+[freqForceLoZ, MagForceLoZ] = ...
+    peakFreq(forceCorrected(:,1),FsForce,'low',FsRot/2)
+[freqForceLoX, MagForceLox] = ...
+    peakFreq(forceCorrected(:,2),FsForce,'low',FsRot/2)
+
+[freqForceHiZ, MagForceHiZ] = ... 
+    peakFreq(forceCorrected(:,1),FsForce,'high',FsRot/2)
+[freqForceHiX, MagForceHiX] = ...
+    peakFreq(forceCorrected(:,2),FsForce,'high',FsRot/2)
 
 
 
