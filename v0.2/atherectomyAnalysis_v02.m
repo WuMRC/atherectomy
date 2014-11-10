@@ -25,7 +25,11 @@ end
 
 %% STEP 3a - Multithreshold analysis - see what looks good (optional)
 
+
 threshLevel = 1:12;
+
+RGB = zeros(vidObj.Height,vidObj.Width,3,max(threshLevel));
+
 figure('units','normalized','outerposition',[0 0 1 1])
 for indThresh = 1:length(threshLevel)
     thresh = multithresh(videoToAnalyze(:,:,1),threshLevel(indThresh));
@@ -41,6 +45,8 @@ threshLevel = 2;    % change based on what looks good from 3a
 
 thresh = multithresh(videoToAnalyze(:,:,1),threshLevel);
 
+videoSegmented = zeros(vidObj.Height,vidObj.Width,nFrames);
+
 for indFrame = 1:nFrames
     videoSegmented(:,:,indFrame) = imquantize(videoToAnalyze(:,:,indFrame),thresh);
 end
@@ -52,6 +58,8 @@ cableColHi = 45;
 
 peakSegment = threshLevel+1;
 
+cable = zeros(vidObj.Height,length(cableColLo:cableColHi),nFrames);
+
 for indFrame = 1:nFrames
     for indCol = cableColLo:cableColHi
         if find(videoSegmented(:,indCol,indFrame)==peakSegment,1,'first') > 1
@@ -61,8 +69,8 @@ for indFrame = 1:nFrames
         end
         
     end
-    % Remove any gaps we may have caused
-    cable(indCol,indFrame) = naninterp(cable(:,indFrame));
+%     % Remove any gaps we may have caused
+%     cable(indCol,indFrame) = naninterp(cable(:,indFrame));
 end
 
 
@@ -109,9 +117,9 @@ FsRot = 60000/60;   % rpm/(sec/min) = Hz
 % or naninterp(cableMotionLo(colOfInterest,:)) into the pesky part
 
 [freqCableLo, magCableLo] = ...
-    peakFreq(cableMotionLo(colOfInterest,:),FsCamera,'low',FsRot*2);
+    peakFreq(naninterp(cableMotionLo(colOfInterest,:)),FsCamera,'low',FsRot*2);
 [freqCableHi, magCableHi] = ...
-    peakFreq(cableMotionHi(colOfInterest,:),FsCamera,'low',FsRot*2);
+    peakFreq(naninterp(cableMotionHi(colOfInterest,:)),FsCamera,'low',FsRot*2);
 
 %% Setp 7 - Track midpoint of the ginding burr
 % Select the midpoint
@@ -123,6 +131,8 @@ close
 
 midCol = uint8(poiX);
 
+burr = zeros(nFrames);
+
 % Track the midpoint
 for indFrame = 1:nFrames
     
@@ -131,8 +141,8 @@ for indFrame = 1:nFrames
             find(videoSegmented(:,midCol,indFrame)==peakSegment,1,'first');
     else burr(indFrame) = NaN;
     end
-    % Remove any gaps we may have caused
-    burr(indFrame) = naninterp(burr(indFrame));
+%     % Remove any gaps we may have caused
+%     burr(indFrame) = naninterp(burr(indFrame));
 end
 
 
@@ -143,7 +153,7 @@ plot(burr(1:5000))
 
 %% STEP 8 - Smooth burr motion
 smoothLevel = 30;
-burrMotionLo = smooth(burr,smoothLevel);
+burrMotionLo = smooth(naninterp(burr),smoothLevel);
 
 plot(burr(1:1000)), hold on, plot(burrMotionLo(1:1000),'r')
 
