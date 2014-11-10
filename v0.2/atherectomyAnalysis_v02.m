@@ -170,14 +170,14 @@ forceCorrected = detrend(force);
 % Find the peak frequency values from the force
 FsForce = 5000;
 [freqForceLoZ, MagForceLoZ] = ...
-    peakFreq(forceCorrected(:,1),FsForce,'low',FsRot/2)
+    peakFreq(forceCorrected(:,1),FsForce,'low',FsRot/2);
 [freqForceLoX, MagForceLox] = ...
-    peakFreq(forceCorrected(:,2),FsForce,'low',FsRot/2)
+    peakFreq(forceCorrected(:,2),FsForce,'low',FsRot/2);
 
 [freqForceHiZ, MagForceHiZ] = ... 
-    peakFreq(forceCorrected(:,1),FsForce,'high',FsRot/2)
+    peakFreq(forceCorrected(:,1),FsForce,'high',FsRot/2);
 [freqForceHiX, MagForceHiX] = ...
-    peakFreq(forceCorrected(:,2),FsForce,'high',FsRot/2)
+    peakFreq(forceCorrected(:,2),FsForce,'high',FsRot/2);
 
 
 
