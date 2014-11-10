@@ -13,9 +13,12 @@ vidObj = VideoReader(videoInfo.filename);
 % This takes a really, really long time, but I see now obvious way to speed
 % it up. I wish I could.
 
-videoToAnalyze = zeros(vidObj.Height,vidObj.Width,vidObj.NumberOfFrames);
+% nFrames = vidObj.NumberOfFrames;
+nFrames = 18000;
 
-for indFrame = 1:vidObj.NumberOfFrames
+videoToAnalyze = zeros(vidObj.Height,vidObj.Width,nFrames);
+
+for indFrame = 1:nFrames
     videoToAnalyze(:,:,indFrame) = read(vidObj,indFrame);
 end
 
@@ -38,7 +41,6 @@ threshLevel = 2;    % change based on what looks good from 3a
 
 thresh = multithresh(videoToAnalyze(:,:,1),threshLevel);
 
-nFrames = 50000;
 for indFrame = 1:nFrames
     videoSegmented(:,:,indFrame) = imquantize(videoToAnalyze(:,:,indFrame),thresh);
 end
