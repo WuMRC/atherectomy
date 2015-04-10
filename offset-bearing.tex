@@ -1,0 +1,45 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+
+\begin{document}
+
+If we have a shaft of radius $a$ that rotates at a rate $\omega$ inside a circular vessel with radius $R$ with a lubricating fluid with viscosity $\mu$ between the shaft and vessel, then to calculate the external force necessary to keep the shaft offset within the vessel, we must find the pressure distribution along the shaft. Because of the eccentricity, $\epsilon$, of the shaft within the vessel, the clearance $h(\theta)$ is not constant. We can define the clearance by
+
+\begin{equation}
+\label{eq:clearance}
+	h(\theta) = (R-a)(1-\epsilon\cos\theta)
+\end{equation}
+
+\begin{equation}
+	-\frac{1}{a}\frac{\partial p}{\partial \theta} 
+	+ \mu \frac{\partial^2 u}{\partial y^2} = 0
+\end{equation}
+
+
+After integrating and satisfying the no-slip condition we get
+
+\begin{equation}
+	u(y) = \left[\frac{1}{2\mu a}\frac{dp}{d\theta}\right]
+	\left(y^2-hy\right)+\omega a \left[1- \frac{y}{h}\right]
+\end{equation}
+
+\begin{align}
+	Q &= \int uW dy \\
+	&= \int_0^h \left\{\left[\frac{1}{2\mu a}\frac{dp}{d\theta}\right]\left(y^2-hy\right)+\omega a \left[1- \frac{y}{h}\right]\right\} Wdy \\
+	&= -\left[\frac{Wh^3}{12\mu a}\frac{dp}{d\theta}\right]+\omega a \frac{Wh}{2}
+\end{align}
+
+\begin{equation}
+	\frac{dp}{d\theta} = \frac{K}{h^3}+\frac{6\mu \omega a^2}{h^2}
+\end{equation} 
+\begin{equation}
+	p(\theta) = \int \left[\frac{K}{h^3}+\frac{6\mu \omega a^2}{h^2} \right]d\theta + C
+\end{equation}
+
+If we recall that Eq \ref{eq:clearance}, we see that this expression cannot be integrated analytically. This leaves us with two routes, numerical integration (using something like the trapezoidal rule) or algebraic approximation (which can, at the very least, get us part of the way there).
+
+
+
+
+
+\end{document}
